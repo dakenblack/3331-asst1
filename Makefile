@@ -8,7 +8,7 @@ all: client server
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 client: client.o
-	$(CC) -o $@ $< $(CFLAGS)
+	$(CC) -o $@ $< 
 
 server: server.o
-	$(CC) -o $@ $< $(CFLAGS)
+	$(CC) -o $@ $< 
