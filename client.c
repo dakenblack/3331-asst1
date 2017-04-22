@@ -4,15 +4,8 @@
  *
  */
 
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <netdb.h>
-#include <string.h>
 #include "shared.h"
+#include "client_tcp.h"
 
 void print_error(char *msg)
 {
@@ -35,43 +28,22 @@ int main(int argc, char* argv[]) {
         exit(1);
     }
 
-    int reqSocket, i, rc;
-    struct sockaddr_in localAddr, servAddr;
-    struct hostent *h;
+    int retVal;
 
-    h = gethostbyname(argv[1]);
-    if(h == NULL) 
-        print_error("unknown host name");
-    
-    servAddr.sin_family = h->h_addrtype;
-    memcpy((char *) &servAddr.sin_addr.s_addr, h->h_addr_list[0], h->h_length);
-    int server_port = atoi(argv[2]);
-    servAddr.sin_port = htons(server_port);
+    retVal = initialize_tcp(argv[1],atoi(argv[2]));
+    if(retVal) {
+        printf("error %d \n",retVal);
+        exit(1);
+    }
 
-    reqSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if(reqSocket<0)
-        print_error("cannot open socket ");
-    
-    localAddr.sin_family = AF_INET;
-    localAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    localAddr.sin_port = htons(0);
-    rc = bind(reqSocket, (struct sockaddr *) &localAddr, sizeof(localAddr));
-    if(rc<0) {
-        printf("%s: cannot bind port TCP %u\n",argv[0],server_port);
-        print_error("error ");
-    }
-    /* connect to server */
-    rc = connect(reqSocket, (struct sockaddr *) &servAddr, sizeof(servAddr));
-    if(rc<0) {
-        print_error("cannot connect ");
-    }
+    int reqSocket = getSocket();
+
     struct requestHeader msg = getHeader(USER_LOGIN,NO_MSG,0);
-    rc = write(reqSocket, (char*)&msg, sizeof(msg));
+    retVal = write(reqSocket, (char*)&msg, sizeof(msg));
     
-    if(rc<0) {
+    if(retVal < 0) {
         close(reqSocket);
         print_error("cannot send data ");
-    
     }
 
     close(reqSocket);
