@@ -13,14 +13,6 @@ void print_error(char *msg)
     exit(1);
 }
 
-struct requestHeader getHeader(unsigned short command, unsigned short messageType, unsigned long msgLength) {
-    struct requestHeader ret;
-    ret.secretKey = REQUEST_KEY;
-    ret.command = command;
-    ret.messageType = messageType;
-    ret.msgLength = msgLength;
-    return ret;
-}
 
 int main(int argc, char* argv[]) {
     if(argc < 3) {

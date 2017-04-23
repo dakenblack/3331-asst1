@@ -19,7 +19,7 @@
 #define ERROR_CANNOT_BIND_PORT 3
 #define ERROR_CANNOT_CONNECT_SERVER 4
 
-#define ERROR_CANNOT_SEND_DATA 5
+#define ERROR_WRITE 5
 
 static int clientSocket;
 
@@ -58,3 +58,32 @@ int initialize_tcp(char* ip, int port) {
 int getSocket() {
     return clientSocket;
 }
+
+struct requestHeader getHeader(unsigned short command, unsigned short messageType, unsigned long msgLength) {
+    struct requestHeader ret;
+    ret.secretKey = REQUEST_KEY;
+    ret.command = command;
+    ret.messageType = messageType;
+    ret.msgLength = msgLength;
+    return ret;
+}
+
+int login(char user[STRING_SIZE], char pass[STRING_SIZE]) {
+    struct requestHeader h = getHeader(USER_LOGIN,KEY_VALUE,sizeof(struct keyValue));
+
+    struct keyValue kv;
+    strcpy(kv.key,user);
+    strcpy(kv.value,pass);
+
+    retVal = write(clientSocket, (char*)&h, sizeof(h));
+    if(retVal < 0) {
+        return ERROR_WRITE;
+    }
+    retVal = write(clientSocket, (char*)&kv, sizeof(kv));
+    if(retVal < 0) {
+        return ERROR_WRITE;
+    }
+
+    return SUCCESS;
+}
+
