@@ -28,16 +28,13 @@ int main(int argc, char* argv[]) {
         exit(1);
     }
 
-    int reqSocket = getSocket();
-
-    struct requestHeader msg = getHeader(USER_LOGIN,NO_MSG,0);
-    retVal = write(reqSocket, (char*)&msg, sizeof(msg));
-    
-    if(retVal < 0) {
-        close(reqSocket);
-        print_error("cannot send data ");
+    retVal = login("something","some");
+    if(retVal) {
+        printf("something went wrong: %d",retVal);
+        deinitialize_tcp();
+        exit(1);
     }
 
-    close(reqSocket);
+    deinitialize_tcp();
     return 0;
 }

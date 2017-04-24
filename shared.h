@@ -9,6 +9,10 @@
 #ifndef SHARED_H
 #define SHARED_H
 
+#include <assert.h>
+#include <unistd.h>
+#include <stdlib.h>
+
 #define STRING_SIZE 24
 
 //command values
@@ -34,6 +38,9 @@
 #define IP_BLOCKED 6
 #define USER_BLACKLISTED 7
 #define INVALID_CLOSING 8
+#define CHECKSUM_FAILED 30
+#define READ_FAILED 40
+#define WRITE_FAILED 50
 
 //messageTypes
 #define NO_MSG 1
@@ -75,5 +82,70 @@ struct keyValue {
 struct key {
     char key[STRING_SIZE];
 };
+
+typedef unsigned char checksum;
+
+checksum getChecksum(char* a, unsigned int size ) {
+    unsigned short sum = 0;
+    for(int i=0;i<size;i++) {
+        sum += (unsigned short)*a;
+        a++;
+        while(sum & 0x0100) {
+            sum = sum & 0x00ff;
+            sum += 1;
+        }
+    }
+    checksum ret = (~sum) & 0x00ff;
+    return ret;
+}
+
+int verifyChecksum(char* a, unsigned int size, checksum c) {
+    return c == getChecksum(a,size);
+}
+
+//NOTE: no functionality to return number of bytes written
+int customWrite(int fd, char* a, unsigned int size) {
+    checksum c = getChecksum(a,size);
+    int retVal = 0,numBytes = 0;
+    assert(size > 0);
+    retVal = write(fd, a, size);
+    if(retVal < 0) {
+        return -1;
+    }
+    numBytes += retVal;
+    retVal = write(fd, (char*)&c, c);
+    if(retVal < 0) {
+        return -1;
+    }
+    numBytes += retVal;
+    return numBytes;
+}
+
+int customRead(int fd,char* a, unsigned int size, int *error) {
+    int retVal = 0, numBytes = 0;
+    checksum c;
+    assert(size > 0);
+
+    retVal = read(fd,a,size);
+    if(retVal == 0) {
+        return -1;
+        *error = READ_FAILED;
+    }
+    numBytes += retVal;
+
+    retVal = read(fd,(char*)&c,sizeof(c));
+    if(retVal == 0) {
+        return -1;
+        *error = READ_FAILED;
+    }
+    numBytes += retVal;
+
+    if(!verifyChecksum(a,size,c)) {
+        return -1;
+        *error = CHECKSUM_FAILED;
+    }
+
+    return numBytes;
+}
 
 #endif

@@ -18,9 +18,18 @@ int main(int argc, char* argv[]) {
     int newSocket = waitForConnection();
 
     struct requestHeader reqHeader;
-    numBytes = read(newSocket, (char*)&reqHeader, sizeof(reqHeader));
+    int error;
+
+    numBytes = customRead(newSocket, (char*)&reqHeader, sizeof(reqHeader),&error);
+    if(numBytes == 0) {
+        printf("something went really wrong 1\n");
+        printf("error: %d\n",error);
+        close(newSocket);
+        close(welcomeSocket);
+        exit(1);
+    }
+
     printf("%d %d %d %d\n",reqHeader.secretKey, reqHeader.command, reqHeader.messageType, reqHeader.msgLength);
-    
 
     close(newSocket);
     close(welcomeSocket);

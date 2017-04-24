@@ -55,6 +55,10 @@ int initialize_tcp(char* ip, int port) {
     return SUCCESS;
 }
 
+int deinitialize_tcp() {
+    close(clientSocket);
+}
+
 int getSocket() {
     return clientSocket;
 }
@@ -70,16 +74,18 @@ struct requestHeader getHeader(unsigned short command, unsigned short messageTyp
 
 int login(char user[STRING_SIZE], char pass[STRING_SIZE]) {
     struct requestHeader h = getHeader(USER_LOGIN,KEY_VALUE,sizeof(struct keyValue));
-
+    int retVal;
     struct keyValue kv;
+
     strcpy(kv.key,user);
     strcpy(kv.value,pass);
 
-    retVal = write(clientSocket, (char*)&h, sizeof(h));
+    retVal = customWrite(clientSocket, (char*)&h, sizeof(h));
     if(retVal < 0) {
         return ERROR_WRITE;
     }
-    retVal = write(clientSocket, (char*)&kv, sizeof(kv));
+
+    retVal = customWrite(clientSocket, (char*)&kv, sizeof(kv));
     if(retVal < 0) {
         return ERROR_WRITE;
     }

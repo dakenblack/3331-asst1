@@ -12,3 +12,6 @@ client: client.o
 
 server: server.o
 	$(CC) -o $@ $< 
+
+temo: temp.o
+	$(CC) -o $@ $< 
