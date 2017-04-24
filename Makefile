@@ -1,11 +1,11 @@
 CC=gcc
-CFlAGS=-I.
+CFLAGS=-g
 DEPS=
 
 all: client server
 
 %.o: %.c $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGS)
+	$(CC) -c $(CFLAGS) -o $@ $< 
 
 client: client.o
 	$(CC) -o $@ $< 
@@ -13,5 +13,8 @@ client: client.o
 server: server.o
 	$(CC) -o $@ $< 
 
-temo: temp.o
+temp : temp.o
 	$(CC) -o $@ $< 
+
+clean: 
+	rm *.o temp client server

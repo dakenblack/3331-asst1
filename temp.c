@@ -1,7 +1,11 @@
 #include "shared.h"
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <assert.h>
+
+
 
 void printBin(unsigned int a, unsigned int size) {
     char* buf = malloc(size*sizeof(char));
@@ -20,19 +24,7 @@ void printBin(unsigned int a, unsigned int size) {
 }
 
 int main(int argc, char** argv) {
-    char a[3];
-    a[0] = 1;
-    a[1] = 123;
-    printf("%d \n",getChecksum(a,0));
-    printf("%d \n",getChecksum(a,1));
-    printf("%d \n",getChecksum(a,2));
-    printf("1 ");
-    printBin(1,8);
-    printf("123 ");
-    printBin(123,8);
-    printBin(getChecksum(a,0),8);
-    printBin(getChecksum(a,1),8);
-    printBin(getChecksum(a,2),8);
-
+    printBin(35,8);
+    printBin(240,8);
     return 0;
 }

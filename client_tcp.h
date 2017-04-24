@@ -20,8 +20,10 @@
 #define ERROR_CANNOT_CONNECT_SERVER 4
 
 #define ERROR_WRITE 5
+#define ERROR_NO_ACK 6
 
 static int clientSocket;
+static struct response lastResp;
 
 int initialize_tcp(char* ip, int port) {
     int i, rc;
@@ -77,19 +79,29 @@ int login(char user[STRING_SIZE], char pass[STRING_SIZE]) {
     int retVal;
     struct keyValue kv;
 
-    strcpy(kv.key,user);
-    strcpy(kv.value,pass);
+    customStrcpy(kv.key,user,STRING_SIZE);
+    customStrcpy(kv.value,pass,STRING_SIZE);
 
-    retVal = customWrite(clientSocket, (char*)&h, sizeof(h));
-    if(retVal < 0) {
-        return ERROR_WRITE;
-    }
+    char buf[1024];
 
-    retVal = customWrite(clientSocket, (char*)&kv, sizeof(kv));
-    if(retVal < 0) {
+    char* ptr = serialize_req_header(buf,h);
+    if(write(clientSocket,buf,sizeof(h)) < 0) {
+        perror("what?");
         return ERROR_WRITE;
     }
 
     return SUCCESS;
+}
+
+int logout() {
+    //struct requestHeader h = getHeader(USER_LOGOUT,NO_MSG,0);
+    //int retVal;
+
+    //retVal = customWrite(clientSocket,(char*)&h,sizeof(h));
+    //if(retVal < 0) {
+    //    return ERROR_WRITE;
+    //}
+
+    //return SUCCESS;
 }
 

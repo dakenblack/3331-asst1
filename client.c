@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
 
     retVal = login("something","some");
     if(retVal) {
-        printf("something went wrong: %d",retVal);
+        printf("something went wrong: %d\n",retVal);
         deinitialize_tcp();
         exit(1);
     }

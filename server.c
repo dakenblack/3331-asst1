@@ -9,6 +9,16 @@
 #include "server_tcp.h"
 #include "shared.h"
 
+struct response getResponse(unsigned short err, unsigned short messageType, unsigned long msgLength, unsigned long ACK) {
+    struct response ret;
+    ret.secretKey = RESPONSE_KEY;
+    ret.ERROR = err;
+    ret.messageType = messageType;
+    ret.msgLength = msgLength;
+    ret.ACK =ACK;
+    return ret;
+}
+
 int main(int argc, char* argv[]) {
     if(argc < 4) {
         printf("ERROR: Usage: ./server <server_port> <block_duration> <timeout>\n");
@@ -18,18 +28,19 @@ int main(int argc, char* argv[]) {
     int newSocket = waitForConnection();
 
     struct requestHeader reqHeader;
-    int error;
+    int error, retVal, numBytes=0;
 
-    numBytes = customRead(newSocket, (char*)&reqHeader, sizeof(reqHeader),&error);
-    if(numBytes == 0) {
-        printf("something went really wrong 1\n");
-        printf("error: %d\n",error);
-        close(newSocket);
-        close(welcomeSocket);
+    char buf[1024];
+
+    retVal = read(newSocket,buf,sizeof(reqHeader));
+    if(retVal < 0 ) {
+        perror("something went wrong\n");
         exit(1);
     }
 
+    char* p = deserialize_req_header(buf,&reqHeader);
     printf("%d %d %d %d\n",reqHeader.secretKey, reqHeader.command, reqHeader.messageType, reqHeader.msgLength);
+
 
     close(newSocket);
     close(welcomeSocket);
