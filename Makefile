@@ -1,5 +1,6 @@
 CC=gcc
-CFLAGS=-g
+CFLAGS=-g 
+OFLAGS=-lpthread
 DEPS=
 
 all: client server
@@ -11,10 +12,10 @@ client: client.o
 	$(CC) -o $@ $< 
 
 server: server.o
-	$(CC) -o $@ $< 
+	$(CC) $(OFLAGS) -o $@ $< 
 
 temp : temp.o
-	$(CC) -o $@ $< 
+	$(CC) $(OFLAGS) -o $@ $< 
 
 clean: 
 	rm *.o temp client server

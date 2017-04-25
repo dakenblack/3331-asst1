@@ -27,6 +27,14 @@
 #define BLOCK 7
 #define UNBLOCK 8
 
+//What values
+#define MESSAGE 1
+#define USER_BROADCAST 2
+#define SERVER_BROADCAST 7
+#define PRIVATE_MESSAGE 3
+#define ERROR_MSG 4
+#define SUCCESS_MSG 0
+
 //Error values
 //when invalid credentials are supplied
 #define SUCCESS 0
@@ -61,7 +69,7 @@
 #define RAW 3
 //the first sizeof(struct key) bytes is of the key type and the rest is raw
 //used to tranmit messages to a particular user
-#define KEY_AND_RAW
+#define KEY_AND_RAW 4
 
 //Keys
 #define REQUEST_KEY 12345
@@ -83,8 +91,8 @@ struct response {
     unsigned int secretKey;
     unsigned short ERROR;
     unsigned short messageType;
+    unsigned short what;
     unsigned long msgLength;
-    unsigned long ACK;
     unsigned long duration;
 };
 
@@ -239,8 +247,8 @@ char* serialize_response(char* buf, struct response a) {
     buf = serialize_uint(buf,a.secretKey);
     buf = serialize_ushort(buf,a.ERROR);
     buf = serialize_ushort(buf,a.messageType);
+    buf = serialize_ushort(buf,a.what);
     buf = serialize_ulong(buf,a.msgLength);
-    buf = serialize_ulong(buf,a.ACK);
     buf = serialize_ulong(buf,a.duration);
     return buf;
 }
@@ -249,8 +257,8 @@ char* deserialize_response(char* buf, struct response* a) {
     buf = deserialize_uint(buf,&(a->secretKey));
     buf = deserialize_ushort(buf,&(a->ERROR));
     buf = deserialize_ushort(buf,&(a->messageType));
+    buf = deserialize_ushort(buf,&(a->what));
     buf = deserialize_ulong(buf,&(a->msgLength));
-    buf = deserialize_ulong(buf,&(a->ACK));
     buf = deserialize_ulong(buf,&(a->duration));
     return buf;
 }

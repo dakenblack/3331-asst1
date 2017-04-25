@@ -23,7 +23,6 @@
 #define ERROR_NO_ACK 6
 
 static int clientSocket;
-static struct response lastResp;
 
 int initialize_tcp(char* ip, int port) {
     int i, rc;
@@ -73,32 +72,8 @@ struct requestHeader getHeader(unsigned short command, unsigned short messageTyp
     ret.msgLength = msgLength;
     return ret;
 }
-void errorHandler(struct response r) {
-    switch(r.ERROR) {
-        case INVALID_DATA: 
-            printf("invalud data: could be an implementation problem\n");
-            break;
-        case INVALID_CRED_2_TRIES:
-            printf("invalid username/password you have 2 tries left\n");
-            break;
-        case INVALID_CRED_1_TRIES:
-            printf("invalid username/password you have 1 try left\n");
-            break;
-        case INVALID_CRED_0_TRIES:
-            printf("invalid username/password you have have been blocked for %d seconds\n",r.duration);
-            break;
-        case NO_SUCH_USER:
-            printf("No user with that username,\n");
-            break;
-        case USER_LOGGED_IN:
-            printf("a session is already active with that username\n");
-            break;
-        default:
-                printf("UNKNOWN ERROR ENCOUNTERED!!\n");
-    }
-}
 
-void login(char user[STRING_SIZE], char pass[STRING_SIZE]) {
+int login(char user[STRING_SIZE], char pass[STRING_SIZE],int *d) {
     struct requestHeader h = getHeader(USER_LOGIN,KEY_VALUE,sizeof(struct keyValue));
     int retVal;
     struct keyValue kv;
@@ -110,29 +85,25 @@ void login(char user[STRING_SIZE], char pass[STRING_SIZE]) {
 
     char* ptr = serialize_req_header(buf,h);
     if(write(clientSocket,buf,sizeof(h)) < 0) {
-        perror("what?");
-        //TODO handle all errors here
+        perror("UNKNOWN ERROR: exiting");
+        exit(1);
     }
 
     ptr = serialize_key_value(buf,kv);
     if(write(clientSocket,buf,sizeof(kv)) < 0) {
-        perror("what?");
-        //TODO handle all errors here
+        perror("UNKNOWN ERROR: exiting");
+        exit(1);
     }
 
     struct response r;
     int duration = 0;
     if(read(clientSocket,buf,sizeof(r)) < 0) {
-        perror("what??");
-        //TODO handle all errors here
+        perror("UNKNOWN ERROR: exiting");
+        exit(1);
     }
     deserialize_response(buf,&r);
-    if(r.ERROR != SUCCESS) {
-        printf("Server returned ERROR: \n");
-        errorHandler(r);
-    } else {
-        printf("Successfully Logged in... \n");
-    }
+    *d = r.duration;
+    return r.ERROR;
 }
 
 int logout() {
