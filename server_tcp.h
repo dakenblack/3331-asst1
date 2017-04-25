@@ -20,7 +20,7 @@ void print_error(char *msg) {
     exit(1);
 }
 
-void initialize(int port, int block_durartion, int timeout) {
+void initialize_tcp(int port, int block_durartion, int timeout) {
     welcomeSocket = socket(AF_INET, SOCK_STREAM,0);
     if(welcomeSocket < 0) {
         print_error("could not open socket ");
@@ -33,6 +33,10 @@ void initialize(int port, int block_durartion, int timeout) {
         print_error("cannot bind port ");
     }
     listen(welcomeSocket,5);
+}
+
+void deinitialize_tcp() {
+    close(welcomeSocket);
 }
     
 /**

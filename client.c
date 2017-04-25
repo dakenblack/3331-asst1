@@ -28,12 +28,7 @@ int main(int argc, char* argv[]) {
         exit(1);
     }
 
-    retVal = login("something","some");
-    if(retVal) {
-        printf("something went wrong: %d\n",retVal);
-        deinitialize_tcp();
-        exit(1);
-    }
+    login("hans","falcon");
 
     deinitialize_tcp();
     return 0;

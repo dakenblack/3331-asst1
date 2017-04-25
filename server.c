@@ -8,15 +8,41 @@
 #include <stdio.h>
 #include "server_tcp.h"
 #include "shared.h"
+#include "server_methods.h"
+#include "server_data.h"
 
-struct response getResponse(unsigned short err, unsigned short messageType, unsigned long msgLength, unsigned long ACK) {
-    struct response ret;
-    ret.secretKey = RESPONSE_KEY;
-    ret.ERROR = err;
-    ret.messageType = messageType;
-    ret.msgLength = msgLength;
-    ret.ACK =ACK;
-    return ret;
+void init() {
+    FILE* fd = fopen("credentials.txt","r");
+    char user[12], pass[12];
+    int isUser = 1;
+    int uI=0,pI=0;
+    int i;
+    char c;
+    if(fd) {
+        c = getc(fd);
+        while(c != EOF ) {
+            char ch = (char)c;
+            c = getc(fd);
+            if(ch == ' ') {
+                isUser = 0;
+                continue;
+            }
+            if(ch == '\n') {
+                isUser = 1;
+                add_user(user,pass);
+                pI = 0;
+                uI = 0;
+                continue;
+            }
+            if(isUser) {
+                user[uI++] = ch;
+            } else {
+                pass[pI++] = ch;
+            }
+        }
+        fclose(fd);
+    }
+
 }
 
 int main(int argc, char* argv[]) {
@@ -24,26 +50,12 @@ int main(int argc, char* argv[]) {
         printf("ERROR: Usage: ./server <server_port> <block_duration> <timeout>\n");
         exit(1);
     }
-    initialize(atoi(argv[1]),atoi(argv[2]),atoi(argv[3]));
-    int newSocket = waitForConnection();
 
-    struct requestHeader reqHeader;
-    int error, retVal, numBytes=0;
-
-    char buf[1024];
-
-    retVal = read(newSocket,buf,sizeof(reqHeader));
-    if(retVal < 0 ) {
-        perror("something went wrong\n");
-        exit(1);
+    init();
+    initialize_tcp(atoi(argv[1]),atoi(argv[2]),atoi(argv[3]));
+    while(1) {
+        int newSocket = waitForConnection();
+        connectionHandler(newSocket);
     }
-
-    char* p = deserialize_req_header(buf,&reqHeader);
-    printf("%d %d %d %d\n",reqHeader.secretKey, reqHeader.command, reqHeader.messageType, reqHeader.msgLength);
-
-
-    close(newSocket);
-    close(welcomeSocket);
-
     return 0;
 }

@@ -40,11 +40,14 @@
 //if this ip address is blocked
 #define IP_BLOCKED 6
 #define USER_BLACKLISTED 7
-#define INVALID_CLOSING 8
+#define INVALID_DATA 8
 #define CHECKSUM_FAILED 30
 #define READ_FAILED 40
 #define WRITE_FAILED 50
 #define DATA_CORRUPT 60
+#define INTERNAL_SERVER_ERROR 70
+#define INVALID_COMMAND 80
+#define NO_SUCH_USER 90
 
 #define SIZE_INT sizeof(int)
 #define SIZE_UINT sizeof(unsigned int)
@@ -82,6 +85,7 @@ struct response {
     unsigned short messageType;
     unsigned long msgLength;
     unsigned long ACK;
+    unsigned long duration;
 };
 
 struct keyValue {
@@ -209,5 +213,46 @@ char* deserialize_req_header(char* buf, struct requestHeader* a) {
     return buf;
 }
 
+char* serialize_key_value(char* buf, struct keyValue a) {
+    buf = serialize_string(buf,a.key,STRING_SIZE);
+    buf = serialize_string(buf,a.value,STRING_SIZE);
+    return buf;
+}
+
+char* deserialize_key_value(char* buf, struct keyValue* a) {
+    buf = deserialize_string(buf,a->key,STRING_SIZE);
+    buf = deserialize_string(buf,a->value,STRING_SIZE);
+    return buf;
+}
+
+char* serialize_key(char* buf, struct key a) {
+    buf = serialize_string(buf,a.key,STRING_SIZE);
+    return buf;
+}
+
+char* deserialize_key(char* buf, struct key* a) {
+    buf = deserialize_string(buf,a->key,STRING_SIZE);
+    return buf;
+}
+
+char* serialize_response(char* buf, struct response a) {
+    buf = serialize_uint(buf,a.secretKey);
+    buf = serialize_ushort(buf,a.ERROR);
+    buf = serialize_ushort(buf,a.messageType);
+    buf = serialize_ulong(buf,a.msgLength);
+    buf = serialize_ulong(buf,a.ACK);
+    buf = serialize_ulong(buf,a.duration);
+    return buf;
+}
+
+char* deserialize_response(char* buf, struct response* a) {
+    buf = deserialize_uint(buf,&(a->secretKey));
+    buf = deserialize_ushort(buf,&(a->ERROR));
+    buf = deserialize_ushort(buf,&(a->messageType));
+    buf = deserialize_ulong(buf,&(a->msgLength));
+    buf = deserialize_ulong(buf,&(a->ACK));
+    buf = deserialize_ulong(buf,&(a->duration));
+    return buf;
+}
 
 #endif
