@@ -10,17 +10,18 @@
 
 pthread_mutex_t print_mutex, port_mutex;
 
-void* worker_func(void* arg) {
+void* thread_worker(void* arg) {
     int port = getSocket();
     char buf[1024];
     while(1) {
         struct response r;
         pthread_mutex_lock(&port_mutex);
         int retVal = read(port,buf,sizeof(struct response));
+        printf("receiver %d bytes\n>",retVal);
         if(retVal < 0) {
             perror("an error occured, exiting..");
             exit(1);
-        } else if (retVal > 0) {
+        } else if (retVal > sizeof(r)) {
             deserialize_response(buf,&r);
             if(r.msgLength > 0) {
                 if(read(port,buf,r.msgLength) < 0 ) {
@@ -30,7 +31,7 @@ void* worker_func(void* arg) {
             }
         }
         pthread_mutex_unlock(&port_mutex);
-        if(retVal > 0) { 
+        if(retVal > sizeof(r)) { 
             struct key k;
             char raw[45];
             char* p;
@@ -123,6 +124,11 @@ int main(int argc, char* argv[]) {
         printf("Something went really wrong??\n");
     else
         printf("Successfully Logged in!!\n");
+
+    pthread_t pth;
+    pthread_create(&pth,NULL,thread_worker,NULL);
+
+    while(1);
 
     deinitialize_tcp();
     return 0;

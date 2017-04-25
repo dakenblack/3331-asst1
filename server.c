@@ -80,16 +80,22 @@ int main(int argc, char* argv[]) {
         pthread_mutex_lock(&not_logged_mutex);
         for(int i=0;i<numInList;i++) {
             char buffer[1024];
-            int retVal = read(notLoggedIn[i],buffer,1024);
-            if(retVal > 0) {
-                if(tryLogin(buffer,retVal,notLoggedIn[i])) {
-                    printf("TODO remove this port from notLoggedInList\n");
+            int retVal;
+            /*if(!isPortOpen(notLoggedIn[i]))*/
+            /*    continue;*/
+
+            retVal = isSocketReady(notLoggedIn[i],500000);
+            if( retVal > 0) {
+                if(tryLogin(notLoggedIn[i])) {
+
                 }
             } else if (retVal < 0) {
-                perror("INTERRNAL_SERVER_ERROR\n");
+                perror("INTERNAL_SERVER_ERROR\n");
             }
         }
         pthread_mutex_unlock(&not_logged_mutex);
+
+        usleep(10000);
     }
     return 0;
 }

@@ -9,7 +9,7 @@ all: client server
 	$(CC) -c $(CFLAGS) -o $@ $< 
 
 client: client.o
-	$(CC) -o $@ $< 
+	$(CC) $(OFLAGS) -o $@ $< 
 
 server: server.o
 	$(CC) $(OFLAGS) -o $@ $< 

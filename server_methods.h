@@ -21,9 +21,9 @@ void sendErrorMsg(int fd, unsigned short err) {
     char buffer[512];
     struct response r = getResponse(err,NO_MSG,ERROR_MSG,0);
     char *p = serialize_response(buffer,r);
-    int ret = write(fd,buffer,sizeof(r));
+    int ret = send(fd,buffer,sizeof(r),MSG_NOSIGNAL);
     if( ret < 0) {
-        perror("something has gone wrong while sending error");
+        printf("%d\n",ret);
     }
 }
 
@@ -31,9 +31,9 @@ void sendSuccessMsg(int fd) {
     char buffer[512];
     struct response r = getResponse(SUCCESS,NO_MSG,SUCCESS_MSG,0);
     char *p = serialize_response(buffer,r);
-    int ret = write(fd,buffer,sizeof(r));
+    int ret = send(fd,buffer,sizeof(r),MSG_NOSIGNAL);
     if( ret < 0) {
-        perror("something has gone wrong while sending error");
+        printf("%d\n",ret);
     }
 }
 
@@ -42,7 +42,7 @@ int serverRead(int fd,char* b, int s,int* numBytes) {
     int retVal = read(fd,b,s);
     if(retVal < 0 ) {
         perror("something went wrong while reading\n");
-        sendErrorMsg(newSocket,INTERNAL_SERVER_ERROR);
+        sendErrorMsg(fd,INTERNAL_SERVER_ERROR);
         return 1;
     }
     *numBytes = *numBytes + retVal;
@@ -50,9 +50,16 @@ int serverRead(int fd,char* b, int s,int* numBytes) {
 }
 
 
-int tryLogin(char* buffer,int numBytes,int sk) {
+int tryLogin(int sk) {
     struct requestHeader header;
-    int error, retVal;
+    int error, retVal, numBytes=0;
+    char buffer[1024];
+    if(serverRead(sk,buffer,1024,&numBytes))
+        return 0;
+
+    //if a a port is closed unexpectedly select will (isPortOpen) will return true
+    if(numBytes == 0)
+        return 0;
 
     char* p = deserialize_req_header(buffer,&header);
     
@@ -65,7 +72,7 @@ int tryLogin(char* buffer,int numBytes,int sk) {
         } else {
             struct keyValue kv;
             deserialize_key_value(p,&kv);
-            int retVal = find_and_login(kv.key,kv.value,newSocket);
+            int retVal = find_and_login(kv.key,kv.value,sk);
             if(retVal) {
                 sendErrorMsg(sk,retVal);
             } else {
