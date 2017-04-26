@@ -27,7 +27,7 @@ void* thread_worker(void* arg) {
                 close(port);
                 exit(1);
             }
-            printf("receive %d bytes\n>",retVal);
+            printf("receive %d bytes\n",retVal);
         } else if(retVal < 0) {
             pthread_mutex_lock(&print_mutex);
             perror("ERROR: ");

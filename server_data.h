@@ -124,8 +124,8 @@ int find_and_login(char* u, char* p,int sock) {
 }
 
 void offlineMessage(int userId, char* m) {
-    db[userId].backlogSize++;
     db[userId].backlog[db[userId].backlogSize] = construct_message(m);
+    db[userId].backlogSize++;
 }
 
 int isBacklog(int userId) {
