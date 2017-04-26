@@ -77,23 +77,50 @@ int main(int argc, char* argv[]) {
     
     while(1) {
         //checking the not logged in list for messages
+        int toBeRemoved[12] = {-1,-1,-1,-1,  -1,-1,-1,-1,  -1,-1,-1,-1};
+        int numInRm = 0;
         pthread_mutex_lock(&not_logged_mutex);
         for(int i=0;i<numInList;i++) {
             char buffer[1024];
             int retVal;
-            /*if(!isPortOpen(notLoggedIn[i]))*/
-            /*    continue;*/
-
             retVal = isSocketReady(notLoggedIn[i],500000);
             if( retVal > 0) {
+                //check if port is open only if socket is ready,
+                //if a SIGPIPE is encountered isSocketReady will return true (1)
+                if(!isPortOpen(notLoggedIn[i])) {
+                    toBeRemoved[numInRm++] = i;
+                    continue;
+                }
                 if(tryLogin(notLoggedIn[i])) {
-
+                    //it worked
+                    toBeRemoved[numInRm++] = i;
                 }
             } else if (retVal < 0) {
                 perror("INTERNAL_SERVER_ERROR\n");
             }
         }
         pthread_mutex_unlock(&not_logged_mutex);
+
+        if(numInRm > 0) {
+            printf("to remove: %d\n",numInRm);
+            //unlocking and locking again to allow the other thread to continue
+            pthread_mutex_lock(&not_logged_mutex);
+            //first set value to 0;
+            for(int i=0;i<numInRm;i++)
+                notLoggedIn[toBeRemoved[i]] = 0;
+            //then fill in the blanks
+            for(int i=0;i<numInList;i++) {
+                if(notLoggedIn[i] == 0) {
+                    for(int j=i+1; j<numInList; j++) {
+                        notLoggedIn[j-1] = notLoggedIn[j];
+                    }
+                }
+            }
+
+            numInList -= numInRm;
+
+            pthread_mutex_unlock(&not_logged_mutex);
+        }
 
         usleep(10000);
     }

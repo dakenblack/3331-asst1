@@ -64,6 +64,20 @@ int getSocket() {
     return clientSocket;
 }
 
+/**
+ * @returns -1: error, 0: timeout, 1: fd is ready
+ */
+int isSocketReady(int fd,int usec) {
+    struct timeval tv;
+    fd_set f_set;
+
+    FD_ZERO(&f_set);
+    FD_SET(fd, &f_set);
+    tv.tv_sec = 0;
+    tv.tv_usec = usec;
+    return select(fd+1, &f_set, NULL, NULL, &tv);
+}
+
 struct requestHeader getHeader(unsigned short command, unsigned short messageType, unsigned long msgLength) {
     struct requestHeader ret;
     ret.secretKey = REQUEST_KEY;

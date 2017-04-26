@@ -11,37 +11,36 @@
 pthread_mutex_t print_mutex, port_mutex;
 
 void* thread_worker(void* arg) {
-    int port = getSocket();
+    int port = getSocket(), retVal;
     char buf[1024];
     while(1) {
-        struct response r;
         pthread_mutex_lock(&port_mutex);
-        int retVal = read(port,buf,sizeof(struct response));
-        printf("receiver %d bytes\n>",retVal);
+        retVal = isSocketReady(port,500000);
+        if(retVal > 0) {
+            retVal = read(port,buf,1024);
+            printf("receive %d bytes\n>",retVal);
+        } else if(retVal < 0) {
+            pthread_mutex_lock(&print_mutex);
+            perror("ERROR: ");
+            exit(1);
+        }
+        pthread_mutex_unlock(&port_mutex);
+
         if(retVal < 0) {
             perror("an error occured, exiting..");
             exit(1);
-        } else if (retVal > sizeof(r)) {
-            deserialize_response(buf,&r);
-            if(r.msgLength > 0) {
-                if(read(port,buf,r.msgLength) < 0 ) {
-                    perror("an error occured, exiting.... ");
-                    exit(2);
-                } 
-            }
-        }
-        pthread_mutex_unlock(&port_mutex);
-        if(retVal > sizeof(r)) { 
+        } else if(retVal > sizeof(struct response)) { 
+            struct response r;
             struct key k;
             char raw[45];
-            char* p;
+            char* p = deserialize_response(buf,&r);
             switch(r.messageType) {
                 case RAW:
-                    strcpy(raw,buf);
+                    strcpy(raw,p);
                     break;
 
                 case KEY_AND_RAW:
-                        p = deserialize_key(buf,&k);
+                        p = deserialize_key(p,&k);
                         strcpy(raw,p);
                         break;
                 default:
@@ -64,8 +63,7 @@ void* thread_worker(void* arg) {
     }
 }
 
-void print_error(char *msg)
-{
+void print_error(char *msg) {
     perror(msg);
     exit(1);
 }

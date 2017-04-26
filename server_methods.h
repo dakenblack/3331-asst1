@@ -49,7 +49,9 @@ int serverRead(int fd,char* b, int s,int* numBytes) {
     return 0;
 }
 
-
+/**
+ * @returns 1: it succeeded, 0: it failed
+ */
 int tryLogin(int sk) {
     struct requestHeader header;
     int error, retVal, numBytes=0;
