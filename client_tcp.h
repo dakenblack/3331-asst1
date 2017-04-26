@@ -98,22 +98,23 @@ int login(char user[STRING_SIZE], char pass[STRING_SIZE],int *d) {
     char buf[1024];
 
     char* ptr = serialize_req_header(buf,h);
-    if(write(clientSocket,buf,sizeof(h)) < 0) {
-        perror("UNKNOWN ERROR: exiting");
-        exit(1);
-    }
-
-    ptr = serialize_key_value(buf,kv);
-    if(write(clientSocket,buf,sizeof(kv)) < 0) {
-        perror("UNKNOWN ERROR: exiting");
+    ptr = serialize_key_value(ptr,kv);
+    if(write(clientSocket,buf,sizeof(h) + sizeof(kv)) < 0) {
+        perror("ERROR: exiting");
         exit(1);
     }
 
     struct response r;
     int duration = 0;
-    if(read(clientSocket,buf,sizeof(r)) < 0) {
-        perror("UNKNOWN ERROR: exiting");
-        exit(1);
+    
+    //this has to be done due to the constant sending of 'a' by the server to see if the port is alive
+    retVal = read(clientSocket,buf,1024);
+    while(retVal < sizeof(r)) {
+        if(retVal < 0) {
+            perror("UNKNOWN ERROR: exiting");
+            exit(1);
+        }
+        retVal = read(clientSocket,buf,1024);
     }
     deserialize_response(buf,&r);
     *d = r.duration;
