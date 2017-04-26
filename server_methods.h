@@ -87,4 +87,37 @@ int tryLogin(int sk) {
     return 0;
 }
 
+/**
+ * Main Connection handler
+ * handles all commadns except login
+ *
+ */
+void connectionHandler(int sk, int userId) {
+    char buffer[1024];
+    struct requestHeader h;
+    int retVal = read(sk,buffer,1024);
+    struct key k;
+    char* m;
+    if(retVal < 0) {
+        perror("error while reading..");
+    } else if(retVal >= sizeof(h)) {
+        char* ptr = deserialize_req_header(buffer,&h);
+        if(h.secretKey != REQUEST_KEY) {
+            sendErrorMsg(sk,DATA_CORRUPT);
+            return;
+        }
+        switch(h.command) {
+            case SEND_MESSAGE:
+                m = deserialize_key(ptr,&k);
+                printf("%s: %s\n",k.key,m);
+                break;
+            case USER_LOGOUT:
+                break;
+            default:
+                sendErrorMsg(sk,INVALID_COMMAND);
+        }
+    }
+    sendSuccessMsg(sk);
+}
+
 #endif

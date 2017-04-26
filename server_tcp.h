@@ -36,8 +36,8 @@ int isSocketReady(int fd,int usec) {
     return select(fd+1, &f_set, NULL, NULL, &tv);
 }
 
-int isPortOpen(int fd) {
-    return send(fd,"a",1,MSG_NOSIGNAL) == 1;
+int isPortOpen(int sk) {
+    return send(sk,"a",1,MSG_NOSIGNAL) == 1;
 }
 
 void initialize_tcp(int port, int block_durartion, int timeout) {

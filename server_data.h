@@ -3,6 +3,7 @@
 
 #include "shared.h"
 #include <string.h>
+#include <assert.h>
 #include <time.h>
 
 //DATA DEFINITIONS
@@ -47,10 +48,28 @@ struct User construct_User(char* u, char*p) {
 
 static struct User db[24];
 static int numUsers = 0;
+static unsigned int blockDuration = 0;
 
 int add_user(char* u, char* p) {
     db[numUsers] = construct_User(u,p);
     numUsers++;
+}
+
+void setBlockDuration(unsigned int d) {
+    blockDuration = d;
+}
+
+int getNumUsers() {
+    return numUsers;
+}
+
+int getUserSocket(int i) {
+    assert(i < numUsers);
+    return db[i].socket;
+}
+
+int isUserOnline(int i) {
+    return db[i].status == ONLINE;
 }
 
 
@@ -70,6 +89,7 @@ int find_and_login(char* u, char* p,int sock) {
         if(db[i].status == ONLINE) {
             return USER_LOGGED_IN;
         } else if(db[i].status == BLOCKED) {
+            // TODO: code to unblock user
             return USER_BLOCKED;
         } else {
             if(strcmp(db[i].password,p) == 0) {

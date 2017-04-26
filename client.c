@@ -6,6 +6,10 @@
 
 #include "shared.h"
 #include "client_tcp.h"
+#include <string.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <pthread.h>
 
 pthread_mutex_t print_mutex, port_mutex;
@@ -23,6 +27,10 @@ void* thread_worker(void* arg) {
             pthread_mutex_lock(&print_mutex);
             perror("ERROR: ");
             exit(1);
+        } else {
+            //socket is not ready
+            pthread_mutex_unlock(&port_mutex);
+            continue;
         }
         pthread_mutex_unlock(&port_mutex);
 
@@ -68,6 +76,14 @@ void print_error(char *msg) {
     exit(1);
 }
 
+void myGets(char* str, int size) {
+    fgets(str,size,stdin);
+    if(str[0] == ' ') {
+        for(int i=0;str[i]!='\0';i++)
+            str[i] = str[i+1];
+    }
+    str[strlen(str)-1] = '\0';
+}
 
 int main(int argc, char* argv[]) {
     if(argc < 3) {
@@ -93,8 +109,8 @@ int main(int argc, char* argv[]) {
     scanf("%s",pass);
     int duration;
     int ret = login(user,pass,&duration);
-    int exit = 0;
-    while(ret != SUCCESS && exit == 0) {
+    int exitFlag = 0;
+    while(ret != SUCCESS && exitFlag == 0) {
         switch(ret) {
             case INVALID_CRED_2_TRIES:
             case INVALID_CRED_1_TRIES:
@@ -103,11 +119,11 @@ int main(int argc, char* argv[]) {
                 break;
             case INVALID_CRED_0_TRIES:
                 printf("You have been blocked for %d seconds\n",duration);
-                exit = 1;
+                exitFlag = 1;
                 break;
             case USER_LOGGED_IN:
                 printf("This user is already logged in!!\n");
-                exit = 1;
+                exitFlag = 1;
                 break;
             case NO_SUCH_USER:
                 printf("There is no such username, please enter credentials again\n> Username: ");
@@ -115,10 +131,10 @@ int main(int argc, char* argv[]) {
                 printf("> Password: ");
                 scanf("%s",pass);
         }
-        if(!exit)
+        if(!exitFlag)
             ret = login(user,pass,&duration);
     }
-    if(exit) 
+    if(exitFlag) 
         printf("Something went really wrong??\n");
     else
         printf("Successfully Logged in!!\n");
@@ -126,6 +142,29 @@ int main(int argc, char* argv[]) {
     pthread_t pth;
     pthread_create(&pth,NULL,thread_worker,NULL);
 
+    char command[16],arg1[16],arg2[16];
+    printf("> ");
+    scanf("%s",command);
+    if(strcmp(command,"message") == 0) {
+        scanf("%s",arg1);
+        myGets(arg2,16);
+        /*printf("<%s> <%s> <%s>\n",command,arg1,arg2);*/
+        int retVal = message(arg1,arg2);
+        if(retVal) {
+            printf("somethinghas gone wrong: %d\n",retVal);
+        }
+    } else if (strcmp(command,"broadcast") == 0) {
+    } else if (strcmp(command,"whoelse") == 0) {
+    } else if (strcmp(command,"whoelsesince") == 0) {
+    } else if (strcmp(command,"block") == 0) {
+    } else if (strcmp(command,"unblock") == 0) {
+    } else if (strcmp(command,"logout") == 0) {
+    } else {
+        printf("UNKNOWN COMMAND, exiting... ");
+        exit(1);
+    }
+
+    printf("running forever....\n");
     while(1);
 
     deinitialize_tcp();

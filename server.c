@@ -45,6 +45,11 @@ void init() {
                 pass[pI++] = ch;
             }
         }
+        if(uI != 0 && pI != 0) {
+            pass[pI] = '\0';
+            printf("<%s> <%s>\n",user,pass);
+            add_user(user,pass);
+        }
         fclose(fd);
     }
 }
@@ -72,6 +77,7 @@ int main(int argc, char* argv[]) {
     pthread_t pth;
 
     init();
+    setBlockDuration(atoi(argv[2]));
     initialize_tcp(atoi(argv[1]),atoi(argv[2]),atoi(argv[3]));
     pthread_create(&pth,NULL,thread_worker,NULL);
     
@@ -85,12 +91,6 @@ int main(int argc, char* argv[]) {
             int retVal;
             retVal = isSocketReady(notLoggedIn[i],500000);
             if( retVal > 0) {
-                //check if port is open only if socket is ready,
-                //if a SIGPIPE is encountered isSocketReady will return true (1)
-                if(!isPortOpen(notLoggedIn[i])) {
-                    toBeRemoved[numInRm++] = i;
-                    continue;
-                }
                 if(tryLogin(notLoggedIn[i])) {
                     //it worked
                     toBeRemoved[numInRm++] = i;
@@ -101,8 +101,8 @@ int main(int argc, char* argv[]) {
         }
         pthread_mutex_unlock(&not_logged_mutex);
 
+        //removing the index from notLoggedIn
         if(numInRm > 0) {
-            printf("to remove: %d\n",numInRm);
             //unlocking and locking again to allow the other thread to continue
             pthread_mutex_lock(&not_logged_mutex);
             //first set value to 0;
@@ -120,6 +120,20 @@ int main(int argc, char* argv[]) {
             numInList -= numInRm;
 
             pthread_mutex_unlock(&not_logged_mutex);
+        }
+
+        //this block will check for a request from any og the users that are online
+        for(int i=0;i<getNumUsers();i++) {
+            if(!isUserOnline(i))
+                continue;
+            int sk = getUserSocket(i);
+            int retVal = isSocketReady(sk,500000);
+            if( retVal > 0) {
+                //there is no way to handle SIGPIPE right now
+                connectionHandler(sk,i);
+            } else if (retVal < 0) {
+                perror("INTERNAL_SERVER_ERROR\n");
+            }
         }
 
         usleep(10000);

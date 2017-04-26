@@ -105,8 +105,6 @@ int login(char user[STRING_SIZE], char pass[STRING_SIZE],int *d) {
     }
 
     struct response r;
-    int duration = 0;
-    
     //this has to be done due to the constant sending of 'a' by the server to see if the port is alive
     retVal = read(clientSocket,buf,1024);
     while(retVal < sizeof(r)) {
@@ -118,6 +116,36 @@ int login(char user[STRING_SIZE], char pass[STRING_SIZE],int *d) {
     }
     deserialize_response(buf,&r);
     *d = r.duration;
+    return r.ERROR;
+}
+
+int message(char* user, char* message) {
+    struct requestHeader h = getHeader( SEND_MESSAGE,
+                                        KEY_AND_RAW,
+                                        sizeof(struct key) + strlen(message) + 1);
+    struct key k;
+    customStrcpy(k.key,user,STRING_SIZE);
+
+    char buffer[1024];
+
+    char* ptr = serialize_req_header(buffer,h);
+    ptr = serialize_key(ptr,k);
+    ptr = serialize_string(ptr,message,strlen(message) + 1);
+
+    if(write(clientSocket,buffer,sizeof(h) + sizeof(k) + strlen(message) + 1) < 0) {
+        perror("ERROR: exiting");
+        exit(1);
+    }
+
+    struct response r;
+    int retVal = read(clientSocket,buffer,1024);
+    while(retVal < sizeof(r)) {
+        if(retVal < 0) {
+            perror("UNKNOWN ERROR: exiting");
+            exit(1);
+        }
+        retVal = read(clientSocket,buffer,1024);
+    }
     return r.ERROR;
 }
 
