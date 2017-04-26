@@ -119,7 +119,7 @@ int login(char user[STRING_SIZE], char pass[STRING_SIZE],int *d) {
     return r.ERROR;
 }
 
-int message(char* user, char* message) {
+int sendMessage(char* user, char* message) {
     struct requestHeader h = getHeader( SEND_MESSAGE,
                                         KEY_AND_RAW,
                                         sizeof(struct key) + strlen(message) + 1);

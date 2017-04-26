@@ -8,7 +8,7 @@
 
 //DATA DEFINITIONS
 struct message {
-    char msg[1024];
+    char msg[64];
     time_t time;
 };
 
@@ -68,12 +68,23 @@ int getUserSocket(int i) {
     return db[i].socket;
 }
 
+char* getUsername(int id) {
+    return db[id].username;
+}
+
+int getUserId(char* un) {
+    for(int i=0;i<numUsers;i++) {
+        if(strcmp(un,db[i].username) == 0)
+            return i;
+    }
+    return -1;
+}
+
 int isUserOnline(int i) {
     return db[i].status == ONLINE;
 }
 
 
-//DATA START
 int find_and_login(char* u, char* p,int sock) {
     int i;
 
@@ -112,5 +123,18 @@ int find_and_login(char* u, char* p,int sock) {
     return SUCCESS;
 }
 
+void offlineMessage(int userId, char* m) {
+    db[userId].backlogSize++;
+    db[userId].backlog[db[userId].backlogSize] = construct_message(m);
+}
+
+int isBacklog(int userId) {
+    return db[userId].backlogSize > 0;
+}
+
+void backlogPop(int userId, char* m) {
+    db[userId].backlogSize--;
+    strcpy(m, db[userId].backlog[db[userId].backlogSize].msg);
+}
 
 #endif

@@ -22,6 +22,11 @@ void* thread_worker(void* arg) {
         retVal = isSocketReady(port,500000);
         if(retVal > 0) {
             retVal = read(port,buf,1024);
+            if(retVal == 0) {
+                printf("something has gone wrong on the server, exiting...\n");
+                close(port);
+                exit(1);
+            }
             printf("receive %d bytes\n>",retVal);
         } else if(retVal < 0) {
             pthread_mutex_lock(&print_mutex);
@@ -44,7 +49,7 @@ void* thread_worker(void* arg) {
             char* p = deserialize_response(buf,&r);
             switch(r.messageType) {
                 case RAW:
-                    strcpy(raw,p);
+                    deserialize_string(p,raw,r.msgLength);
                     break;
 
                 case KEY_AND_RAW:
@@ -58,10 +63,10 @@ void* thread_worker(void* arg) {
             pthread_mutex_lock(&print_mutex);
             switch(r.messageType) {
                 case KEY_AND_RAW:
-                    printf("%s: %s \n>",k.key,raw);
+                    printf("> %s: %s \n",k.key,raw);
                     break;
                 case RAW:
-                    printf("%s \n>",raw);
+                    printf("> %s \n>",raw);
                     break;
                 default:
                     printf("error:");
@@ -134,10 +139,8 @@ int main(int argc, char* argv[]) {
         if(!exitFlag)
             ret = login(user,pass,&duration);
     }
-    if(exitFlag) 
-        printf("Something went really wrong??\n");
-    else
-        printf("Successfully Logged in!!\n");
+    if(!exitFlag) 
+        printf("> Successfully Logged in!!\n");
 
     pthread_t pth;
     pthread_create(&pth,NULL,thread_worker,NULL);
@@ -149,7 +152,7 @@ int main(int argc, char* argv[]) {
         scanf("%s",arg1);
         myGets(arg2,16);
         /*printf("<%s> <%s> <%s>\n",command,arg1,arg2);*/
-        int retVal = message(arg1,arg2);
+        int retVal = sendMessage(arg1,arg2);
         if(retVal) {
             printf("somethinghas gone wrong: %d\n",retVal);
         }

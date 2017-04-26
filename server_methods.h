@@ -23,7 +23,7 @@ void sendErrorMsg(int fd, unsigned short err) {
     char *p = serialize_response(buffer,r);
     int ret = send(fd,buffer,sizeof(r),MSG_NOSIGNAL);
     if( ret < 0) {
-        printf("%d\n",ret);
+        printf("in sendErrorMsg %d\n",ret);
     }
 }
 
@@ -33,7 +33,7 @@ void sendSuccessMsg(int fd) {
     char *p = serialize_response(buffer,r);
     int ret = send(fd,buffer,sizeof(r),MSG_NOSIGNAL);
     if( ret < 0) {
-        printf("%d\n",ret);
+        printf("in sendSuccessMsg %d\n",ret);
     }
 }
 
@@ -47,6 +47,24 @@ int serverRead(int fd,char* b, int s,int* numBytes) {
     }
     *numBytes = *numBytes + retVal;
     return 0;
+}
+
+void sendMsgToUser(int u,char* mess) {
+    if(isUserOnline(u)) {
+        int toSocket = getUserSocket(u);
+        struct response r = getResponse(SUCCESS,RAW,MESSAGE,strlen(mess)+1);
+        
+        char buffer[1024];
+        char *p = serialize_response(buffer,r);
+        p = serialize_string(p,mess,strlen(mess) + 1);
+        int ret = send(toSocket,buffer,sizeof(r) + strlen(mess) + 1,MSG_NOSIGNAL);
+        if( ret < 0) {
+            printf("in sendMsgToUser %d\n",ret);
+        }
+
+    } else {
+        offlineMessage(u, mess);
+    }
 }
 
 /**
@@ -79,6 +97,14 @@ int tryLogin(int sk) {
                 sendErrorMsg(sk,retVal);
             } else {
                 sendSuccessMsg(sk);
+                usleep(1000);
+                int id = getUserId(kv.key);
+                while(isBacklog(id)) {
+                    char m[64];
+                    backlogPop(id,m);
+                    sendMsgToUser(id,m);
+                }
+
                 return 1;
             }
         }
@@ -109,7 +135,16 @@ void connectionHandler(int sk, int userId) {
         switch(h.command) {
             case SEND_MESSAGE:
                 m = deserialize_key(ptr,&k);
-                printf("%s: %s\n",k.key,m);
+                int id = getUserId(k.key);
+                if(id == -1) {
+                    sendErrorMsg(sk,NO_SUCH_USER);
+                    return;
+                }
+                char completeMsg[64];
+                strcpy(completeMsg,getUsername(userId));
+                strcat(completeMsg,": ");
+                strcat(completeMsg,m);
+                sendMsgToUser(id,completeMsg);
                 break;
             case USER_LOGOUT:
                 break;
@@ -117,7 +152,9 @@ void connectionHandler(int sk, int userId) {
                 sendErrorMsg(sk,INVALID_COMMAND);
         }
     }
-    sendSuccessMsg(sk);
+    if(retVal != 0) {
+        sendSuccessMsg(sk);
+    }
 }
 
 #endif
