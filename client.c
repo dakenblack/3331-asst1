@@ -14,6 +14,11 @@
 
 pthread_mutex_t print_mutex, port_mutex;
 
+/**
+ * thread worker function
+ *
+ * expected to run indefinitely
+ */
 void* thread_worker(void* arg) {
     int port = getSocket(), retVal;
     char buf[1024];
@@ -35,6 +40,8 @@ void* thread_worker(void* arg) {
         } else {
             //socket is not ready
             pthread_mutex_unlock(&port_mutex);
+            //give a chance for other threads to play
+            usleep(100000);
             continue;
         }
         pthread_mutex_unlock(&port_mutex);
@@ -76,11 +83,13 @@ void* thread_worker(void* arg) {
     }
 }
 
-void print_error(char *msg) {
-    perror(msg);
-    exit(1);
-}
 
+/**
+ * custom gets function that removes '\n' at the end and ' ' in the beginning
+ *
+ * @param str string to read into
+ * @param size maximum number of bytes to read
+ */
 void myGets(char* str, int size) {
     fgets(str,size,stdin);
     if(str[0] == ' ') {
@@ -88,6 +97,30 @@ void myGets(char* str, int size) {
             str[i] = str[i+1];
     }
     str[strlen(str)-1] = '\0';
+}
+
+/**
+ * function that handles all commands to the client
+ */
+void commandHandler(char* command) {
+    char arg1[16],arg2[16];
+    if(strcmp(command,"message") == 0) {
+        scanf("%s",arg1);
+        myGets(arg2,16);
+        int retVal = sendMessage(arg1,arg2);
+        if(retVal) {
+            printf("commandHandler: something has gone wrong: %d\n",retVal);
+        }
+    } else if (strcmp(command,"broadcast") == 0) {
+    } else if (strcmp(command,"whoelse") == 0) {
+    } else if (strcmp(command,"whoelsesince") == 0) {
+    } else if (strcmp(command,"block") == 0) {
+    } else if (strcmp(command,"unblock") == 0) {
+    } else if (strcmp(command,"logout") == 0) {
+    } else {
+        printf("UNKNOWN COMMAND, exiting... ");
+        exit(1);
+    }
 }
 
 int main(int argc, char* argv[]) {
@@ -145,31 +178,20 @@ int main(int argc, char* argv[]) {
     pthread_t pth;
     pthread_create(&pth,NULL,thread_worker,NULL);
 
-    char command[16],arg1[16],arg2[16];
-    printf("> ");
-    scanf("%s",command);
-    if(strcmp(command,"message") == 0) {
-        scanf("%s",arg1);
-        myGets(arg2,16);
-        /*printf("<%s> <%s> <%s>\n",command,arg1,arg2);*/
-        int retVal = sendMessage(arg1,arg2);
-        if(retVal) {
-            printf("somethinghas gone wrong: %d\n",retVal);
-        }
-    } else if (strcmp(command,"broadcast") == 0) {
-    } else if (strcmp(command,"whoelse") == 0) {
-    } else if (strcmp(command,"whoelsesince") == 0) {
-    } else if (strcmp(command,"block") == 0) {
-    } else if (strcmp(command,"unblock") == 0) {
-    } else if (strcmp(command,"logout") == 0) {
-    } else {
-        printf("UNKNOWN COMMAND, exiting... ");
-        exit(1);
+    char command[16];
+    while(1) {
+        printf("> ");
+        scanf("%s",command);
+        pthread_mutex_lock(&port_mutex);
+
+        commandHandler(command);
+
+        pthread_mutex_unlock(&port_mutex);
+        //to give time to the other thread
+        usleep(100000);
     }
 
-    printf("running forever....\n");
+    printf("You should never see this\n");
     while(1);
-
-    deinitialize_tcp();
     return 0;
 }

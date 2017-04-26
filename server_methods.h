@@ -5,7 +5,9 @@
 #include "server_data.h"
 #include <errno.h>
 
-//METHOD SECTION
+/**
+ * short hand function to create a repsonse object
+ */
 struct response getResponse(unsigned short err, unsigned short messageType, unsigned short what, unsigned long msgLength) {
     struct response ret;
     ret.secretKey = RESPONSE_KEY;
@@ -17,6 +19,9 @@ struct response getResponse(unsigned short err, unsigned short messageType, unsi
     return ret;
 }
 
+/**
+ * cusotom error and success message functions
+ */
 void sendErrorMsg(int fd, unsigned short err) {
     char buffer[512];
     struct response r = getResponse(err,NO_MSG,ERROR_MSG,0);
@@ -37,7 +42,14 @@ void sendSuccessMsg(int fd) {
     }
 }
 
-
+/**
+ * custom read function that will also print out error messages
+ *
+ * @param fd file descriptor or socket
+ * @param b buffer to read into
+ * @param s maximum number of bytes to read
+ * @param numBytes will add number of bytes read into the value pointed to by this pointer
+ */
 int serverRead(int fd,char* b, int s,int* numBytes) {
     int retVal = read(fd,b,s);
     if(retVal < 0 ) {
@@ -49,6 +61,11 @@ int serverRead(int fd,char* b, int s,int* numBytes) {
     return 0;
 }
 
+/**
+ * @param u userId to send message to
+ * @param mess null terminated string that holds the message
+ *
+ */
 void sendMsgToUser(int u,char* mess) {
     if(isUserOnline(u)) {
         int toSocket = getUserSocket(u);

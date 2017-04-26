@@ -146,6 +146,7 @@ int sendMessage(char* user, char* message) {
         }
         retVal = read(clientSocket,buffer,1024);
     }
+    deserialize_response(buffer,&r);
     return r.ERROR;
 }
 
