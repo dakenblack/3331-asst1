@@ -120,6 +120,9 @@ int tryLogin(int sk) {
                     char m[64];
                     backlogPop(id,m);
                     sendMsgToUser(id,m);
+                    //TODO flush should do the same thing right?
+                    //OR maybe just wait for a byte of data back or something?
+                    usleep(1000000);
                 }
 
                 return 1;

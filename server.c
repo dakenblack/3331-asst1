@@ -63,7 +63,7 @@ void* thread_worker(void* arg) {
         int newSocket = waitForConnection();
         pthread_mutex_lock(&not_logged_mutex);
         notLoggedIn[numInList++] = newSocket;
-        printf("adding new socket to the list, current size: %d\n",numInList);
+        /*printf("adding new socket to the list, current size: %d\n",numInList);*/
         pthread_mutex_unlock(&not_logged_mutex);
     }
 }

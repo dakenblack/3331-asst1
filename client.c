@@ -32,7 +32,7 @@ void* thread_worker(void* arg) {
                 close(port);
                 exit(1);
             }
-            printf("receive %d bytes\n",retVal);
+            /*printf("receive %d bytes\n>",retVal);*/
         } else if(retVal < 0) {
             pthread_mutex_lock(&print_mutex);
             perror("ERROR: ");
@@ -70,10 +70,10 @@ void* thread_worker(void* arg) {
             pthread_mutex_lock(&print_mutex);
             switch(r.messageType) {
                 case KEY_AND_RAW:
-                    printf("> %s: %s \n",k.key,raw);
+                    printf("%s: %s \n> ",k.key,raw);
                     break;
                 case RAW:
-                    printf("> %s \n>",raw);
+                    printf("%s \n> ",raw);
                     break;
                 default:
                     printf("error:");
@@ -108,8 +108,14 @@ void commandHandler(char* command) {
         scanf("%s",arg1);
         myGets(arg2,16);
         int retVal = sendMessage(arg1,arg2);
-        if(retVal) {
-            printf("commandHandler: something has gone wrong: %d\n",retVal);
+        switch(retVal) {
+            case SUCCESS:
+                break;
+            case NO_SUCH_USER:
+                printf("> there is no user with that username... \n");
+                break;
+            default:
+                printf("commandHandler: something has gone wrong: %d\n",retVal);
         }
     } else if (strcmp(command,"broadcast") == 0) {
     } else if (strcmp(command,"whoelse") == 0) {
