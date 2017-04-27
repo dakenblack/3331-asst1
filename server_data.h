@@ -32,6 +32,7 @@ struct User {
     unsigned int loginAttempts;
     time_t lastCmd;
     time_t blockedTime;
+    time_t loggedIn;
 };
 
 struct User construct_User(char* u, char*p) {
@@ -43,6 +44,7 @@ struct User construct_User(char* u, char*p) {
     ret.backlogSize = 0;
     ret.loginAttempts = 0;
     time(&(ret.lastCmd));
+    time(&(ret.loggedIn));
     return ret;
 }
 
@@ -121,6 +123,7 @@ int find_and_login(char* u, char* p,int sock) {
                 db[i].status = ONLINE;
                 time(&(db[i].lastCmd));
                 db[i].loginAttempts = 0;
+                time(&(db[i].loggedIn));
                 return SUCCESS;
             } else {
                 db[i].loginAttempts ++;
@@ -138,6 +141,7 @@ int find_and_login(char* u, char* p,int sock) {
 void logout(int id) {
     db[id].status = OFFLINE;
     db[id].socket = -1;
+    db[id].loggedIn = 0;
 }
 
 void offlineMessage(int userId, char* m) {
@@ -146,6 +150,10 @@ void offlineMessage(int userId, char* m) {
     }
     db[userId].backlog[0] = construct_message(m);
     db[userId].backlogSize++;
+}
+
+time_t getLoggedInTime(int id) {
+    return db[id].loggedIn;
 }
 
 int isBacklog(int userId) {

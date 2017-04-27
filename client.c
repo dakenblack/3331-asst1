@@ -140,6 +140,19 @@ void commandHandler(char* command) {
                 printf("commandHelper: UNKNOWN ERROR: %d\n",retVal);
         }
     } else if (strcmp(command,"whoelsesince") == 0) {
+        myGets(arg1,16);
+        struct key* users; int num;
+        int retVal = historySince(&users,&num,arg1);
+        switch(retVal) {
+            case SUCCESS:
+                for(int i=0;i<num;i++) {
+                    printf("%s\n",users[i].key);
+                }
+                free(users);
+                break;
+            default:
+                printf("commandHelper: UNKNOWN ERROR: %d\n",retVal);
+        }
     } else if (strcmp(command,"block") == 0) {
     } else if (strcmp(command,"unblock") == 0) {
     } else if (strcmp(command,"logout") == 0) {

@@ -214,6 +214,47 @@ int history(struct key** users, int* numUsers) {
 
 }
 
+int historySince(struct key** users, int* numUsers,char* since) {
+    struct requestHeader h = getHeader( HISTORY,
+                                        KEY,
+                                        sizeof(struct key));
+
+    char buffer[1024];
+    struct key k;
+    strcpy(k.key,since);
+
+    char* ptr = serialize_req_header(buffer,h);
+    serialize_key(ptr,k);
+
+    if(write(clientSocket,buffer,sizeof(h) + sizeof(k)) < 0) {
+        perror("ERROR: exiting");
+        exit(1);
+    }
+
+    struct response r;
+    int retVal = read(clientSocket,buffer,1024);
+    while(retVal < sizeof(r)) {
+        if(retVal < 0) {
+            perror("UNKNOWN ERROR: exiting");
+            exit(1);
+        }
+        retVal = read(clientSocket,buffer,1024);
+    }
+    ptr = deserialize_response(buffer,&r);
+    if(r.ERROR != SUCCESS) {
+        return r.ERROR;
+    }
+    *numUsers = r.msgLength / sizeof(struct key);
+    *users = (struct key*)malloc(*numUsers * sizeof(struct key));
+    for(int i=0; i<*numUsers; i++) {
+        struct key k;
+        ptr = deserialize_key(ptr,&k);
+        strcpy((*users)[i].key,k.key);
+    }
+    return r.ERROR;
+
+}
+
 int logout() {
     struct requestHeader h = getHeader(USER_LOGOUT,NO_MSG,0);
     int retVal;

@@ -133,12 +133,20 @@ int tryLogin(int sk) {
     return 0;
 }
 
-void returnHistory(int id,int sk) {
+void returnHistory(int id,int sk,long timeSince) {
     int ids[12] = {-1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1};
     int num = 0;
     for(int i=0;i<getNumUsers();i++) {
-        if(isUserOnline(i) && i != id )
-            ids[num++] = i; 
+        if(timeSince >= 0) {
+            time_t crnt;
+            time(&crnt);
+            if(crnt - getLoggedInTime(i) < timeSince && isUserOnline(i) && i != id) {
+                ids[num++] = i; 
+            }
+        } else {
+            if(isUserOnline(i) && i != id )
+                ids[num++] = i; 
+        }
     }
     struct response r = getResponse(SUCCESS,KEY,HISTORY,num*sizeof(struct key));
     char buffer[1024];
@@ -168,6 +176,7 @@ void connectionHandler(int sk, int userId) {
     struct key k;
     char completeMsg[64];
     char* m;
+
     if(retVal < 0) {
         perror("error while reading..");
     } else if(retVal >= sizeof(h)) {
@@ -198,7 +207,14 @@ void connectionHandler(int sk, int userId) {
                 }
                 break;
             case HISTORY:
-                returnHistory(userId,sk);
+                if(h.messageType == NO_MSG) {
+                    returnHistory(userId,sk,-1);
+                } else if (h.messageType == KEY) {
+                    deserialize_key(ptr,&k);
+                    returnHistory(userId,sk,atol(k.key));
+                } else {
+                    sendErrorMsg(sk,INVALID_COMMAND);
+                }
                 break;
             case USER_LOGOUT:
                 logout(userId);
