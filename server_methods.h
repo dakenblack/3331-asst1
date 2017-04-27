@@ -193,19 +193,55 @@ void connectionHandler(int sk, int userId) {
                     sendErrorMsg(sk,NO_SUCH_USER);
                     return;
                 }
+                if(isBlocked(userId,id)) {
+                    sendErrorMsg(sk,USER_BLACKLISTED);
+                    return;
+                }
                 strcpy(completeMsg,getUsername(userId));
                 strcat(completeMsg,": ");
                 strcat(completeMsg,m);
                 sendMsgToUser(id,completeMsg);
                 break;
+
             case BROADCAST:
                 strcpy(completeMsg,getUsername(userId));
                 strcat(completeMsg,": ");
                 strcat(completeMsg,ptr);
                 for(int i=0;i<getNumUsers();i++) {
+                    if(isBlocked(userId,i)) {
+                        continue;
+                        //TODO send notification to sender that these users did not get the message
+                    }
                     sendMsgToUser(i,completeMsg);
                 }
                 break;
+
+            case BLOCK:
+                if(h.messageType != KEY) {
+                    sendErrorMsg(sk,INVALID_DATA);
+                    return;
+                }
+                deserialize_key(ptr,&k);
+                retVal = blockUser(userId,getUserId(k.key));
+                if(retVal) {
+                    sendErrorMsg(sk,retVal);
+                    return;
+                }
+                break;
+
+            case UNBLOCK:
+                if(h.messageType != KEY) {
+                    sendErrorMsg(sk,INVALID_DATA);
+                    return;
+                }
+                deserialize_key(ptr,&k);
+                retVal = unblockUser(userId,getUserId(k.key));
+                if(retVal) {
+                    sendErrorMsg(sk,retVal);
+                    return;
+                }
+                break;
+
             case HISTORY:
                 if(h.messageType == NO_MSG) {
                     returnHistory(userId,sk,-1);
@@ -214,18 +250,20 @@ void connectionHandler(int sk, int userId) {
                     returnHistory(userId,sk,atol(k.key));
                 } else {
                     sendErrorMsg(sk,INVALID_COMMAND);
+                    return;
                 }
                 break;
+
             case USER_LOGOUT:
                 logout(userId);
                 close(sk);
-                break;
+                return;
+
             default:
                 sendErrorMsg(sk,INVALID_COMMAND);
+                return;
         }
-        if(h.command != USER_LOGOUT) {
-            sendSuccessMsg(sk);
-        }
+        sendSuccessMsg(sk);
     }
 }
 

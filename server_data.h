@@ -33,6 +33,8 @@ struct User {
     time_t lastCmd;
     time_t blockedTime;
     time_t loggedIn;
+    int blocked[12];
+    int blockedSize;
 };
 
 struct User construct_User(char* u, char*p) {
@@ -45,12 +47,14 @@ struct User construct_User(char* u, char*p) {
     ret.loginAttempts = 0;
     time(&(ret.lastCmd));
     time(&(ret.loggedIn));
+    ret.blockedSize = 0;
     return ret;
 }
 
 static struct User db[24];
 static int numUsers = 0;
 static unsigned int blockDuration = 0;
+
 
 int add_user(char* u, char* p) {
     db[numUsers] = construct_User(u,p);
@@ -67,6 +71,42 @@ unsigned long getBlockDuration() {
 
 int getNumUsers() {
     return numUsers;
+}
+
+int blockUser(int id,int toBlock) {
+    int i;
+    for(i=0;i<db[id].blockedSize;i++) {
+        if(db[id].blocked[i] == toBlock)
+            break;
+    }
+    if(i != db[id].blockedSize)
+        return USER_ALREADY_BLACKLISTED;
+    db[id].blocked[db[id].blockedSize] = toBlock;
+    db[id].blockedSize++;
+    return SUCCESS;
+}
+
+int unblockUser(int id, int toUnblock) {
+    int i;
+    for(i =0; i<db[id].blockedSize; i++) {
+        if(db[id].blocked[i] == toUnblock)
+            break;
+    }
+    if(i == db[id].blockedSize)
+        return USER_NOT_BLACKLISTED;
+    for(int j=i+1; j<db[id].blockedSize; j++) {
+        db[id].blocked[j-1] = db[id].blocked[j];
+    }
+    db[id].blockedSize--;
+}
+
+int isBlocked(int from, int to) {
+    int i;
+    for(i=0; i<db[to].blockedSize; i++) {
+        if(db[to].blocked[i] == from)
+            break;
+    }
+    return i != db[to].blockedSize; 
 }
 
 int getUserSocket(int i) {

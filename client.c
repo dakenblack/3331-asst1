@@ -114,6 +114,9 @@ void commandHandler(char* command) {
             case NO_SUCH_USER:
                 printf("> there is no user with that username... \n");
                 break;
+            case USER_BLACKLISTED:
+                printf("> The recipienct has blocked your account \n");
+                break;
             default:
                 printf("commandHandler: something has gone wrong: %d\n",retVal);
         }
@@ -154,7 +157,29 @@ void commandHandler(char* command) {
                 printf("commandHelper: UNKNOWN ERROR: %d\n",retVal);
         }
     } else if (strcmp(command,"block") == 0) {
+        myGets(arg1,16);
+        int retVal = block_user(arg1);
+        switch(retVal) {
+            case SUCCESS:
+                break;
+            case USER_ALREADY_BLACKLISTED:
+                printf("Given user has already been blacklisted\n>");
+                break;
+            default:
+                printf("commandHelper: UNKNOWN ERROR: %d\n",retVal);
+        }
     } else if (strcmp(command,"unblock") == 0) {
+        myGets(arg1,16);
+        int retVal = unblock_user(arg1);
+        switch(retVal) {
+            case SUCCESS:
+                break;
+            case USER_NOT_BLACKLISTED:
+                printf("Given user was not previously blacklisted\n>");
+                break;
+            default:
+                printf("commandHelper: UNKNOWN ERROR: %d\n",retVal);
+        }
     } else if (strcmp(command,"logout") == 0) {
         logout();
         printf("successfully logged out, exiting...");

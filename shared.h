@@ -57,6 +57,8 @@
 #define INTERNAL_SERVER_ERROR 70
 #define INVALID_COMMAND 80
 #define NO_SUCH_USER 90
+#define USER_ALREADY_BLACKLISTED 91
+#define USER_NOT_BLACKLISTED 92
 
 #define SIZE_INT sizeof(int)
 #define SIZE_UINT sizeof(unsigned int)

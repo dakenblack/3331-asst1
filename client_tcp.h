@@ -252,7 +252,66 @@ int historySince(struct key** users, int* numUsers,char* since) {
         strcpy((*users)[i].key,k.key);
     }
     return r.ERROR;
+}
 
+int block_user(char* u) {
+    struct requestHeader h = getHeader( BLOCK,
+                                        KEY,
+                                        sizeof(struct key));
+    struct key k;
+    customStrcpy(k.key,u,STRING_SIZE);
+
+    char buffer[1024];
+
+    char* ptr = serialize_req_header(buffer,h);
+    ptr = serialize_key(ptr,k);
+
+    if(write(clientSocket,buffer,sizeof(h) + sizeof(k)) < 0) {
+        perror("ERROR: exiting");
+        exit(1);
+    }
+
+    struct response r;
+    int retVal = read(clientSocket,buffer,1024);
+    while(retVal < sizeof(r)) {
+        if(retVal < 0) {
+            perror("UNKNOWN ERROR: exiting");
+            exit(1);
+        }
+        retVal = read(clientSocket,buffer,1024);
+    }
+    deserialize_response(buffer,&r);
+    return r.ERROR;
+}
+
+int unblock_user(char* u) {
+    struct requestHeader h = getHeader( UNBLOCK,
+                                        KEY,
+                                        sizeof(struct key));
+    struct key k;
+    customStrcpy(k.key,u,STRING_SIZE);
+
+    char buffer[1024];
+
+    char* ptr = serialize_req_header(buffer,h);
+    ptr = serialize_key(ptr,k);
+
+    if(write(clientSocket,buffer,sizeof(h) + sizeof(k)) < 0) {
+        perror("ERROR: exiting");
+        exit(1);
+    }
+
+    struct response r;
+    int retVal = read(clientSocket,buffer,1024);
+    while(retVal < sizeof(r)) {
+        if(retVal < 0) {
+            perror("UNKNOWN ERROR: exiting");
+            exit(1);
+        }
+        retVal = read(clientSocket,buffer,1024);
+    }
+    deserialize_response(buffer,&r);
+    return r.ERROR;
 }
 
 int logout() {
