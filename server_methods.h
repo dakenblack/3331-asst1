@@ -133,6 +133,29 @@ int tryLogin(int sk) {
     return 0;
 }
 
+void returnHistory(int id,int sk) {
+    int ids[12] = {-1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1};
+    int num = 0;
+    for(int i=0;i<getNumUsers();i++) {
+        if(isUserOnline(i) && i != id )
+            ids[num++] = i; 
+    }
+    struct response r = getResponse(SUCCESS,KEY,HISTORY,num*sizeof(struct key));
+    char buffer[1024];
+    int size = sizeof(r);
+    char *ptr = serialize_response(buffer,r);
+    for(int i =0;i<num;i++) {
+        struct key k;
+        strcpy(k.key,getUsername(ids[i]));
+        ptr = serialize_key(ptr,k);
+        size += sizeof(k);
+    }
+    int ret = send(sk,buffer,size,MSG_NOSIGNAL);
+    if( ret < 0) {
+        printf("in sendMsgToUser %d\n",ret);
+    }
+}
+
 /**
  * Main Connection handler
  * handles all commadns except login
@@ -173,6 +196,9 @@ void connectionHandler(int sk, int userId) {
                 for(int i=0;i<getNumUsers();i++) {
                     sendMsgToUser(i,completeMsg);
                 }
+                break;
+            case HISTORY:
+                returnHistory(userId,sk);
                 break;
             case USER_LOGOUT:
                 logout(userId);

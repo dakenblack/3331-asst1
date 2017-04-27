@@ -127,6 +127,18 @@ void commandHandler(char* command) {
                 printf("commandHelper: UNKNOWN ERROR: %d\n",retVal);
         }
     } else if (strcmp(command,"whoelse") == 0) {
+        struct key* users; int num;
+        int retVal = history(&users,&num);
+        switch(retVal) {
+            case SUCCESS:
+                for(int i=0;i<num;i++) {
+                    printf("%s\n",users[i].key);
+                }
+                free(users);
+                break;
+            default:
+                printf("commandHelper: UNKNOWN ERROR: %d\n",retVal);
+        }
     } else if (strcmp(command,"whoelsesince") == 0) {
     } else if (strcmp(command,"block") == 0) {
     } else if (strcmp(command,"unblock") == 0) {

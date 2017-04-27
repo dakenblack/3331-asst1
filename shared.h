@@ -34,6 +34,7 @@
 #define PRIVATE_MESSAGE 3
 #define ERROR_MSG 4
 #define SUCCESS_MSG 0
+#define HISTORY 5
 
 //Error values
 //when invalid credentials are supplied
@@ -67,6 +68,7 @@
 #define KEY_VALUE 2
 //just assume it is a string
 #define RAW 3
+#define KEY 7
 //the first sizeof(struct key) bytes is of the key type and the rest is raw
 //used to tranmit messages to a particular user
 #define KEY_AND_RAW 4
