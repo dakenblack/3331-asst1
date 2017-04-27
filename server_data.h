@@ -135,6 +135,11 @@ int find_and_login(char* u, char* p,int sock) {
     return SUCCESS;
 }
 
+void logout(int id) {
+    db[id].status = OFFLINE;
+    db[id].socket = -1;
+}
+
 void offlineMessage(int userId, char* m) {
     for(int i=db[userId].backlogSize; i>0; i--) {
         db[userId].backlog[i] = db[userId].backlog[i-1];

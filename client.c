@@ -131,6 +131,9 @@ void commandHandler(char* command) {
     } else if (strcmp(command,"block") == 0) {
     } else if (strcmp(command,"unblock") == 0) {
     } else if (strcmp(command,"logout") == 0) {
+        logout();
+        printf("successfully logged out, exiting...");
+        exit(0);
     } else {
         printf("UNKNOWN COMMAND, exiting... ");
         exit(1);

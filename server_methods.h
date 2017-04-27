@@ -175,11 +175,15 @@ void connectionHandler(int sk, int userId) {
                 }
                 break;
             case USER_LOGOUT:
+                logout(userId);
+                close(sk);
                 break;
             default:
                 sendErrorMsg(sk,INVALID_COMMAND);
         }
-        sendSuccessMsg(sk);
+        if(h.command != USER_LOGOUT) {
+            sendSuccessMsg(sk);
+        }
     }
 }
 
