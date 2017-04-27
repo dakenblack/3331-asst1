@@ -118,6 +118,14 @@ void commandHandler(char* command) {
                 printf("commandHandler: something has gone wrong: %d\n",retVal);
         }
     } else if (strcmp(command,"broadcast") == 0) {
+        myGets(arg1,16);
+        int retVal = sendBroadcast(arg1);
+        switch(retVal) {
+            case SUCCESS:
+                break;
+            default:
+                printf("commandHelper: UNKNOWN ERROR: %d\n",retVal);
+        }
     } else if (strcmp(command,"whoelse") == 0) {
     } else if (strcmp(command,"whoelsesince") == 0) {
     } else if (strcmp(command,"block") == 0) {
@@ -169,17 +177,27 @@ int main(int argc, char* argv[]) {
                 printf("This user is already logged in!!\n");
                 exitFlag = 1;
                 break;
+            case USER_BLOCKED:
+                printf("User is still blocked for %d seconds", duration);
+                exitFlag = 1;
+                break;
             case NO_SUCH_USER:
                 printf("There is no such username, please enter credentials again\n> Username: ");
                 scanf("%s",user);
                 printf("> Password: ");
                 scanf("%s",pass);
+            default:
+                printf("Unknown Error: %d",ret);
+                exitFlag = 1;
         }
         if(!exitFlag)
             ret = login(user,pass,&duration);
     }
     if(!exitFlag) 
         printf("> Successfully Logged in!!\n");
+    else
+        exit(1);
+      
 
     pthread_t pth;
     pthread_create(&pth,NULL,thread_worker,NULL);

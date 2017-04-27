@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
     pthread_t pth;
 
     init();
-    setBlockDuration(atoi(argv[2]));
+    setBlockDuration(atol(argv[2]));
     initialize_tcp(atoi(argv[1]),atoi(argv[2]),atoi(argv[3]));
     pthread_create(&pth,NULL,thread_worker,NULL);
     

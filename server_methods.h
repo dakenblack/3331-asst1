@@ -15,7 +15,7 @@ struct response getResponse(unsigned short err, unsigned short messageType, unsi
     ret.messageType = messageType;
     ret.msgLength = msgLength;
     ret.what = what;
-    ret.duration = 123;
+    ret.duration = getBlockDuration();
     return ret;
 }
 
@@ -143,6 +143,7 @@ void connectionHandler(int sk, int userId) {
     struct requestHeader h;
     int retVal = read(sk,buffer,1024);
     struct key k;
+    char completeMsg[64];
     char* m;
     if(retVal < 0) {
         perror("error while reading..");
@@ -160,19 +161,24 @@ void connectionHandler(int sk, int userId) {
                     sendErrorMsg(sk,NO_SUCH_USER);
                     return;
                 }
-                char completeMsg[64];
                 strcpy(completeMsg,getUsername(userId));
                 strcat(completeMsg,": ");
                 strcat(completeMsg,m);
                 sendMsgToUser(id,completeMsg);
+                break;
+            case BROADCAST:
+                strcpy(completeMsg,getUsername(userId));
+                strcat(completeMsg,": ");
+                strcat(completeMsg,ptr);
+                for(int i=0;i<getNumUsers();i++) {
+                    sendMsgToUser(i,completeMsg);
+                }
                 break;
             case USER_LOGOUT:
                 break;
             default:
                 sendErrorMsg(sk,INVALID_COMMAND);
         }
-    }
-    if(retVal != 0) {
         sendSuccessMsg(sk);
     }
 }

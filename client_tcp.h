@@ -150,6 +150,33 @@ int sendMessage(char* user, char* message) {
     return r.ERROR;
 }
 
+int sendBroadcast(char* message) {
+    struct requestHeader h = getHeader( BROADCAST,
+                                        RAW,
+                                        strlen(message) + 1);
+    char buffer[1024];
+
+    char* ptr = serialize_req_header(buffer,h);
+    ptr = serialize_string(ptr,message,strlen(message) + 1);
+
+    if(write(clientSocket,buffer,sizeof(h) + strlen(message) + 1) < 0) {
+        perror("ERROR: exiting");
+        exit(1);
+    }
+
+    struct response r;
+    int retVal = read(clientSocket,buffer,1024);
+    while(retVal < sizeof(r)) {
+        if(retVal < 0) {
+            perror("UNKNOWN ERROR: exiting");
+            exit(1);
+        }
+        retVal = read(clientSocket,buffer,1024);
+    }
+    deserialize_response(buffer,&r);
+    return r.ERROR;
+}
+
 int logout() {
     struct requestHeader h = getHeader(USER_LOGOUT,NO_MSG,0);
     int retVal;

@@ -55,8 +55,12 @@ int add_user(char* u, char* p) {
     numUsers++;
 }
 
-void setBlockDuration(unsigned int d) {
+void setBlockDuration(unsigned long d) {
     blockDuration = d;
+}
+
+unsigned long getBlockDuration() {
+    return blockDuration;
 }
 
 int getNumUsers() {
@@ -100,7 +104,15 @@ int find_and_login(char* u, char* p,int sock) {
         if(db[i].status == ONLINE) {
             return USER_LOGGED_IN;
         } else if(db[i].status == BLOCKED) {
-            // TODO: code to unblock user
+            time_t crnt;
+            time(&crnt);
+            if(crnt - db[i].blockedTime > blockDuration) {
+                //unblock and try again
+                db[i].status = OFFLINE;
+                db[i].blockedTime = 0;
+                //TODO maybe figure out how to send the time left
+                return find_and_login(u,p,sock);
+            }
             return USER_BLOCKED;
         } else {
             if(strcmp(db[i].password,p) == 0) {

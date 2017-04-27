@@ -23,7 +23,7 @@
 #define SEND_MESSAGE 3
 #define LIST_USERS 4
 #define HISTORY 5
-#define BROUDCAST 6
+#define BROADCAST 6
 #define BLOCK 7
 #define UNBLOCK 8
 
