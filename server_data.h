@@ -98,6 +98,7 @@ int unblockUser(int id, int toUnblock) {
         db[id].blocked[j-1] = db[id].blocked[j];
     }
     db[id].blockedSize--;
+    return SUCCESS;
 }
 
 int isBlocked(int from, int to) {
