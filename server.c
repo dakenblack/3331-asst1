@@ -56,8 +56,16 @@ void init() {
 
 int notLoggedIn[12];
 int numInList = 0;
+
+// mutex to make sure the notLoggedIn list is not corrupted
+// only this resource is used between threads hence only one mutex is required
 pthread_mutex_t not_logged_mutex;
 
+/**
+ * this thread continually listens for new connections and adds them to the notLoggedIn array
+ *
+ * It is the job of the main thread to listen for login requests from the ports in the notLoggedIn List
+ */
 void* thread_worker(void* arg) {
     while(1) {
         int newSocket = waitForConnection();
@@ -68,6 +76,9 @@ void* thread_worker(void* arg) {
     }
 }
 
+/**
+ * main thread
+ */
 int main(int argc, char* argv[]) {
     if(argc < 4) {
         printf("ERROR: Usage: ./server <server_port> <block_duration> <timeout>\n");
@@ -75,6 +86,7 @@ int main(int argc, char* argv[]) {
     }
     pthread_mutex_init(&not_logged_mutex,NULL);
     pthread_t pth;
+    int timeoutDuration = atoi(argv[3]);
 
     init();
     setBlockDuration(atol(argv[2]));
@@ -86,6 +98,8 @@ int main(int argc, char* argv[]) {
         int toBeRemoved[12] = {-1,-1,-1,-1,  -1,-1,-1,-1,  -1,-1,-1,-1};
         int numInRm = 0;
         pthread_mutex_lock(&not_logged_mutex);
+
+        //parsing the notLoggedInList, for connections that might have send a login request
         for(int i=0;i<numInList;i++) {
             char buffer[1024];
             int retVal;
@@ -129,10 +143,19 @@ int main(int argc, char* argv[]) {
             int sk = getUserSocket(i);
             int retVal = isSocketReady(sk,500000);
             if( retVal > 0) {
-                //there is no way to handle SIGPIPE right now
+                //TODO: there is no way to handle SIGPIPE right now
+                resetLastCmd(i);
                 connectionHandler(sk,i);
             } else if (retVal < 0) {
                 perror("INTERNAL_SERVER_ERROR\n");
+            } else {
+                time_t crnt;
+                time(&crnt);
+                if((crnt - getLastCmd(i)) > timeoutDuration) {
+                    sendMsgToUser(i,"User logged out due to lack of activity");
+                    logout(i);
+                    close(sk);
+                }
             }
         }
 

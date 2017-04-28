@@ -55,6 +55,13 @@ static struct User db[24];
 static int numUsers = 0;
 static unsigned int blockDuration = 0;
 
+void resetLastCmd(int userId) {
+    time(&(db[userId].lastCmd));
+}
+
+time_t getLastCmd(int userId) {
+    return db[userId].lastCmd;
+}
 
 int add_user(char* u, char* p) {
     db[numUsers] = construct_User(u,p);
