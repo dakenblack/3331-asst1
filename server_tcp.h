@@ -40,7 +40,7 @@ int isPortOpen(int sk) {
     return send(sk,"a",1,MSG_NOSIGNAL) == 1;
 }
 
-void initialize_tcp(int port, int block_durartion, int timeout) {
+void initialize_tcp(int port) {
     welcomeSocket = socket(AF_INET, SOCK_STREAM,0);
     if(welcomeSocket < 0) {
         print_error("could not open socket ");

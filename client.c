@@ -117,6 +117,9 @@ void commandHandler(char* command) {
             case USER_BLACKLISTED:
                 printf("> The recipienct has blocked your account \n");
                 break;
+            case SAME_USER:
+                printf("> you can't send a message to yourself\n");
+                break;
             default:
                 printf("commandHandler: something has gone wrong: %d\n",retVal);
         }

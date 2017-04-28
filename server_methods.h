@@ -114,6 +114,17 @@ int tryLogin(int sk) {
                 sendErrorMsg(sk,retVal);
             } else {
                 sendSuccessMsg(sk);
+                char completeMsg[64];
+                strcpy(completeMsg,"user ");
+                strcat(completeMsg,kv.key);
+                strcat(completeMsg," has come online");
+                int userId = getUserId(kv.key);
+                for(int i=0;i<getNumUsers();i++) {
+                    if(i == userId || !isUserOnline(i) || isBlocked(userId,i)) {
+                        continue;
+                    }
+                    sendMsgToUser(i,completeMsg);
+                }
                 usleep(1000);
                 int id = getUserId(kv.key);
                 while(isBacklog(id)) {
@@ -189,6 +200,10 @@ void connectionHandler(int sk, int userId) {
             case SEND_MESSAGE:
                 m = deserialize_key(ptr,&k);
                 int id = getUserId(k.key);
+                if(id == userId) {
+                    sendErrorMsg(sk,SAME_USER);
+                    return;
+                }
                 if(id == -1) {
                     sendErrorMsg(sk,NO_SUCH_USER);
                     return;

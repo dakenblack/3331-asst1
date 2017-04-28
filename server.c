@@ -87,10 +87,16 @@ int main(int argc, char* argv[]) {
     pthread_mutex_init(&not_logged_mutex,NULL);
     pthread_t pth;
     int timeoutDuration = atoi(argv[3]);
+    long blockDuration = atol(argv[2]);
+    int port = atoi(argv[1]);
+    if(port <= 0 || blockDuration <= 0 || timeoutDuration <= 0) {
+        printf("given values must be numbers and larger than 0\n");
+        exit(1);
+    }
 
     init();
-    setBlockDuration(atol(argv[2]));
-    initialize_tcp(atoi(argv[1]),atoi(argv[2]),atoi(argv[3]));
+    setBlockDuration(blockDuration);
+    initialize_tcp(port);
     pthread_create(&pth,NULL,thread_worker,NULL);
     
     while(1) {
