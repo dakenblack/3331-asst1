@@ -7,10 +7,10 @@
 #include "shared.h"
 #include "client_tcp.h"
 #include <string.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
+#include <unistd.h>
 
 pthread_mutex_t print_mutex, port_mutex;
 
