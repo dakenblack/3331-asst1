@@ -202,9 +202,24 @@ int main(int argc, char* argv[]) {
     int retVal;
 
     retVal = initialize_tcp(argv[1],atoi(argv[2]));
-    if(retVal) {
-        printf("error %d \n",retVal);
-        exit(1);
+    switch(retVal) {
+        case ERROR_UNKNOWN_HOST:
+            printf("an error occured while parsing the provided host\n");
+            exit(1);
+        case ERROR_CANNOT_OPEN_SOCKET:
+            printf("Socket could not be opened\n");
+            exit(1);
+        case ERROR_CANNOT_BIND_PORT:
+            printf("Could not bind to port\n");
+            exit(1);
+        case ERROR_CANNOT_CONNECT_SERVER:
+            printf("Cannot connect to server\n");
+            exit(1);
+        case SUCCESS:
+            break;
+        default:
+            printf("Unkown error: %d, exiting \n",retVal);
+            exit(1);
     }
     char user[12], pass[12];
 
