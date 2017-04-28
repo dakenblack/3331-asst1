@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-g 
+CFLAGS=-g -std=c11
 OFLAGS=-lpthread
 DEPS=
 
